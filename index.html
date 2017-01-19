@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8"> 
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script type="text/javascript" src="js/AudioContextMonkeyPatch.js"></script>
+  <script type="text/javascript" src="js/dsp.js"></script>
+
+  <script type="text/javascript" src="js/osc_workerJsDsp.js"></script>
+  <script type="text/javascript" src="js/osc_MultipleWorkersJsDsp.js"></script>
+  <script type="text/javascript" src="js/osc_jsDsp.js"></script>
+  <script type="text/javascript" src="js/osc_webAudio.js"></script>
+
+  <style type="text/css">
+    body {
+      font-size: 30px;
+    }
+    button {
+      width: 10em;
+      height: 4em;
+      vertical-align: middle;
+    }
+    #bufferStarved {
+      display: none;
+      color: red;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="title"></div>
+
+  <button class="startButton" data-benchmark="osc_workerJsDsp">oscillators Worker JS DSP</button>
+  <button class="startButton" data-benchmark="osc_MultipleWorkersJsDsp">oscillators Multiple workers JS DSP</button>
+  <button class="startButton" data-benchmark="osc_jsDsp">oscillators JS DSP</button>
+  <button class="startButton" data-benchmark="osc_webAudio">oscillators Web Audio</button>
+
+  <div id="controls" style="display:none;">
+    <div id="nodeCount">
+      <span>Node count : </span><span class="value">0</span>
+    </div>
+    <div>
+      <button onclick="benchmark.addNode(1);">+1</button>
+      <button onclick="benchmark.addNode(10);">+10</button>
+    </div>
+    <div>
+      <button onclick="benchmark.removeNode(1);">-1</button>
+      <button onclick="benchmark.removeNode(10);">-10</button>
+    </div>
+
+    <div id="bufferStarved">Buffer starved</div>
+    <div id="bufferState">
+      <span>Samples in buffer</span>
+      <span class="value">0</span>
+    </div>
+  </div>
+
+  <script>
+    // Polyfilling NodeList to be able to iterate over results of querySelectorAll
+    NodeList.prototype.forEach = function(fn) { Array.prototype.forEach.call(this, fn) }
+
+    var benchmark
+    var is_iOS = /iPad|iPhone|iPod/.test(navigator.platform)
+    var eventType = is_iOS ? 'touchend' : 'click'
+    
+    var UI = {
+      setTitle: function(title) {
+        document.querySelector('#title').innerHTML = title
+      },
+
+      updateNodeCount: function(count) {
+        document.querySelector('#nodeCount .value').innerHTML = count
+      },
+
+      bufferStarved: function() {
+        var el = document.querySelector('#bufferStarved')
+        el.setAttribute('style', 'display:block;')
+        setTimeout(function() { el.setAttribute('style', '') }, 100)
+      },
+    }
+
+    document.querySelectorAll('.startButton').forEach(function(buttonEl) {
+      buttonEl.addEventListener(eventType, function() {
+        benchmark = window[buttonEl.dataset.benchmark]
+        document.querySelectorAll('.startButton').forEach(function(buttonEl) {
+          buttonEl.setAttribute('style', 'display:none;')
+        })
+        document.querySelector('#controls').setAttribute('style', 'display:block;')
+        context = new AudioContext
+        benchmark.start(context)
+      })
+    })
+  </script>
+</body>
+
+</html>
