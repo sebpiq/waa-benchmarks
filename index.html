@@ -4,6 +4,7 @@
   <meta charset="UTF-8"> 
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <script type="text/javascript" src="js/AudioContextMonkeyPatch.js"></script>
+  <script type="text/javascript" src="js/utils.js"></script>
   <script type="text/javascript" src="js/dsp.js"></script>
 
   <script type="text/javascript" src="js/osc_workerJsDsp.js"></script>
@@ -42,10 +43,12 @@
     <div>
       <button onclick="benchmark.addNode(1);">+1</button>
       <button onclick="benchmark.addNode(10);">+10</button>
+      <button onclick="benchmark.addNode(50);">+50</button>
     </div>
     <div>
       <button onclick="benchmark.removeNode(1);">-1</button>
       <button onclick="benchmark.removeNode(10);">-10</button>
+      <button onclick="benchmark.removeNode(50);">-50</button>
     </div>
 
     <div id="bufferStarved">Buffer starved</div>

@@ -1,14 +1,7 @@
 window.osc_jsDsp = {
-
-  context: null,
-  audioNode: null,
-  numberOfChannels: 1,
   // Android sound is all choppy with buffer size less than 4096
   // https://bugs.chromium.org/p/chromium/issues/detail?id=650425
   blockSize: 4096,
-  dspSum: null,
-  dspSink: null,
-  blocksOut: [],
 
   addNode: function(count) {
     for (var i = 0; i < count; i++) {
@@ -32,32 +25,37 @@ window.osc_jsDsp = {
   start: function(context) {
     UI.setTitle('Oscillator benchmark : JS DSP in main thread')
     var self = this
-    dsp.SAMPLE_RATE = context.sampleRate
-    dsp.BLOCK_SIZE = this.blockSize
-    this.dspSum = new dsp.Sum()
-    this.dspSink = new dsp.Gain(this.dspSum)
-    this.context = context
-    this.audioNode = context.createScriptProcessor(
-      this.blockSize, this.numberOfChannels, this.numberOfChannels)
-
-    this.audioNode.connect(context.destination)
-  
-    this.audioNode.onaudioprocess = function(event) {
-      var ch, block = []
-      
-      // If there is any processed block, play it back ...
-      if (self.blocksOut.length) {
-        block = self.blocksOut.shift()
-        for (ch = 0; ch < self.numberOfChannels; ch++)
-          event.outputBuffer.getChannelData(ch).set(block[ch])
-      } else setTimeout(UI.bufferStarved, 0)
-
-      // Generate next block on next tick
-      setTimeout(function() {
-        self.blocksOut.push([self.dspSink.pullBlock()])
-      }, 0)
+    var dspOpts = {
+      blockSize: this.blockSize,
+      sampleRate: context.sampleRate
     }
 
+    dsp.initialize(dspOpts)
+    this.context = context
+    this.dspSum = new dsp.Sum()
+    this.dspSink = new dsp.Gain(this.dspSum)
+
+    // Make a source with expected interface for WebAudioSink
+    var source = {
+      pullBlock: function() {
+        if (this.blocks.length)
+          return this.blocks.shift()
+        else {
+          setTimeout(UI.bufferStarved, 0)
+          return this.zeros.pullBlock()
+        }
+      },
+
+      generateBlock: function () {
+        this.blocks.push(self.dspSink.pullBlock())
+      },
+
+      blocks: [],
+      zeros: new dsp.Zeros(),
+    }
+    
+    this.webAudioSink = new dsp.WebAudioSink(context, source)
+    this.webAudioSink.afteraudioprocess = function() { source.generateBlock() }
   }
 
 }

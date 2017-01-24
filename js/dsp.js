@@ -1,10 +1,24 @@
 ;(function() {
 
+var BLOCK_SIZE = null
+var SAMPLE_RATE = null
+
+var Zeros = function() {
+  this.zeros = new Float32Array(BLOCK_SIZE)
+  this.outBlock = new Float32Array(BLOCK_SIZE)
+}
+
+Zeros.prototype.pullBlock = function() {
+  this.outBlock.set(this.zeros)
+  return this.outBlock
+}
+
+
 var Osc = function() {
   this.phase = 0
-  this.J = 2 * Math.PI / dsp.SAMPLE_RATE
+  this.J = 2 * Math.PI / SAMPLE_RATE
   this.setFreq(0)
-  this.outBlock = new Float32Array(dsp.BLOCK_SIZE)
+  this.outBlock = new Float32Array(BLOCK_SIZE)
 }
 
 Osc.prototype.pullBlock = function() {
@@ -29,8 +43,8 @@ Osc.prototype.setFreq = function(freq) {
 
 var Sum = function() {
   this.sources = []
-  this.outBlock = new Float32Array(dsp.BLOCK_SIZE)
-  this.zeros = new Float32Array(dsp.BLOCK_SIZE)
+  this.outBlock = new Float32Array(BLOCK_SIZE)
+  this.zeros = new Float32Array(BLOCK_SIZE)
 }
 
 Sum.prototype.pullBlock = function() {
@@ -40,7 +54,7 @@ Sum.prototype.pullBlock = function() {
   outBlock.set(this.zeros)
   for (i = 0, sourcesCount = this.sources.length; i < sourcesCount; i++) {
     inBlock = this.sources[i].pullBlock()
-    for (j = 0; j < dsp.BLOCK_SIZE; j++)
+    for (j = 0; j < BLOCK_SIZE; j++)
       outBlock[j] += inBlock[j]
   }
   return outBlock
@@ -58,14 +72,14 @@ Sum.prototype.popSource = function() {
 var Gain = function(source) {
   this.source = source
   this.gain = 1
-  this.outBlock = new Float32Array(dsp.BLOCK_SIZE)
+  this.outBlock = new Float32Array(BLOCK_SIZE)
 }
 
 Gain.prototype.pullBlock = function() {
   var outBlock = this.outBlock
   outBlock.set(this.source.pullBlock())
   var i, length
-  for (i = 0; i < dsp.BLOCK_SIZE; i++)
+  for (i = 0; i < BLOCK_SIZE; i++)
     outBlock[i] *= this.gain
   return outBlock
 }
@@ -75,12 +89,45 @@ Gain.prototype.setGain = function(gain) {
 }
 
 
+WebAudioSink = function(context, source) {
+  var self = this
+  var channelCount = 1
+  this.context = context
+
+  this.audioNode = context.createScriptProcessor(
+    BLOCK_SIZE, channelCount, channelCount)
+  
+  this.audioNode.connect(context.destination)
+
+  this.audioNode.onaudioprocess = function(event) {
+    var ch, chArrayOut, chArrayIn, block
+    block = [source.pullBlock()]
+    for (ch = 0; ch < channelCount; ch++)
+      event.outputBuffer.getChannelData(ch).set(block[ch])
+
+    // Handle the `blockOut` queue.
+    setTimeout(function() { self.afteraudioprocess() }, 0)
+  }
+}
+
+WebAudioSink.prototype.afteraudioprocess = function() {}
+
+
+function initialize(opts) {
+  if (!opts.blockSize || !opts.sampleRate)
+    throw new Error('missing initialization parameters')
+  BLOCK_SIZE = opts.blockSize
+  SAMPLE_RATE = opts.sampleRate
+}
+
+
 var dsp = {
-  BLOCK_SIZE: 256,
-  SAMPLE_RATE: 44100,
+  initialize: initialize,
+  Zeros: Zeros,
   Osc: Osc,
   Sum: Sum,
-  Gain: Gain
+  Gain: Gain,
+  WebAudioSink: WebAudioSink
 }
 this.dsp = dsp
 
