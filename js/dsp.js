@@ -1,7 +1,18 @@
+// A series of functions for computing DSP in JavaScript
+
 ;(function() {
 
 var BLOCK_SIZE = null
 var SAMPLE_RATE = null
+
+
+function initialize(opts) {
+  if (!opts.blockSize || !opts.sampleRate)
+    throw new Error('missing initialization parameters')
+  BLOCK_SIZE = opts.blockSize
+  SAMPLE_RATE = opts.sampleRate
+}
+
 
 var Zeros = function() {
   this.zeros = new Float32Array(BLOCK_SIZE)
@@ -89,46 +100,12 @@ Gain.prototype.setGain = function(gain) {
 }
 
 
-WebAudioSink = function(context, source) {
-  var self = this
-  var channelCount = 1
-  this.context = context
-
-  this.audioNode = context.createScriptProcessor(
-    BLOCK_SIZE, channelCount, channelCount)
-  
-  this.audioNode.connect(context.destination)
-
-  this.audioNode.onaudioprocess = function(event) {
-    var ch, chArrayOut, chArrayIn, block
-    block = [source.pullBlock()]
-    for (ch = 0; ch < channelCount; ch++)
-      event.outputBuffer.getChannelData(ch).set(block[ch])
-
-    // Handle the `blockOut` queue.
-    setTimeout(function() { self.afteraudioprocess() }, 0)
-  }
-}
-
-WebAudioSink.prototype.afteraudioprocess = function() {}
-
-
-function initialize(opts) {
-  if (!opts.blockSize || !opts.sampleRate)
-    throw new Error('missing initialization parameters')
-  BLOCK_SIZE = opts.blockSize
-  SAMPLE_RATE = opts.sampleRate
-}
-
-
-var dsp = {
+this.dsp = {
   initialize: initialize,
   Zeros: Zeros,
   Osc: Osc,
   Sum: Sum,
-  Gain: Gain,
-  WebAudioSink: WebAudioSink
+  Gain: Gain
 }
-this.dsp = dsp
 
-})(this)
+}).apply(this)

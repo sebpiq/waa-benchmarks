@@ -38,23 +38,24 @@ window.osc_jsDsp = {
     // Make a source with expected interface for WebAudioSink
     var source = {
       pullBlock: function() {
-        if (this.blocks.length)
-          return this.blocks.shift()
-        else {
+        if (this.nextBlock) {
+          var block = this.nextBlock
+          this.nextBlock = null
+          return block
+        } else {
           setTimeout(UI.bufferStarved, 0)
-          return this.zeros.pullBlock()
+          return new Float32Array(self.blockSize)
         }
       },
 
       generateBlock: function () {
-        this.blocks.push(self.dspSink.pullBlock())
+        this.nextBlock = self.dspSink.pullBlock()
       },
 
-      blocks: [],
-      zeros: new dsp.Zeros(),
+      nextBlock: null
     }
     
-    this.webAudioSink = new dsp.WebAudioSink(context, source)
+    this.webAudioSink = new utils.WebAudioSink(context, source, dspOpts)
     this.webAudioSink.afteraudioprocess = function() { source.generateBlock() }
   }
 

@@ -1,3 +1,5 @@
+// A web worker for computing DSP in JavaScript
+
 importScripts('dsp.js')
 
 var debugActivated = true

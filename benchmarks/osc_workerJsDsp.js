@@ -22,12 +22,12 @@ window.osc_workerJsDsp = {
 
     dsp.initialize(dspOpts)
     this.context = context
-    this.dspWorker = new DspWorker(dspOpts)
+    this.dspWorker = new utils.DspWorker(dspOpts)
 
     this.dspWorker.onchanged = function() { UI.updateNodeCount(this.nodeCount) }
     this.dspWorker.onstarved = function() { UI.bufferStarved() }
 
-    this.webAudioSink = new dsp.WebAudioSink(context, this.dspWorker.source)
+    this.webAudioSink = new utils.WebAudioSink(context, this.dspWorker.source, dspOpts)
     this.webAudioSink.afteraudioprocess = function() {
       // Update buffer state on UI
       document.querySelector('#bufferState .value').innerHTML 

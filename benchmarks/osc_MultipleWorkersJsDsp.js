@@ -39,10 +39,10 @@ window.osc_MultipleWorkersJsDsp = {
     this.dspSum = new dsp.Sum()
     this.dspSink = new dsp.Gain(this.dspSum)
     this.dspWorkers = [
-      new DspWorker(dspOpts), 
-      new DspWorker(dspOpts), 
-      new DspWorker(dspOpts),
-      new DspWorker(dspOpts)
+      new utils.DspWorker(dspOpts), 
+      new utils.DspWorker(dspOpts), 
+      new utils.DspWorker(dspOpts),
+      new utils.DspWorker(dspOpts)
     ]
 
     this.dspSink.setGain(1 / this.dspWorkers.length)
@@ -53,7 +53,7 @@ window.osc_MultipleWorkersJsDsp = {
       dspWorker.onstarved = function() { UI.bufferStarved() }
     })
 
-    this.webAudioSink = new dsp.WebAudioSink(context, this.dspSink)
+    this.webAudioSink = new utils.WebAudioSink(context, this.dspSink, dspOpts)
     this.webAudioSink.afteraudioprocess = function() {
       // Update buffer state on UI
       document.querySelector('#bufferState .value').innerHTML = 

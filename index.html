@@ -3,14 +3,17 @@
 <head>
   <meta charset="UTF-8"> 
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <script type="text/javascript" src="js/AudioContextMonkeyPatch.js"></script>
+  <script type="text/javascript" src="js/vendor/AudioContextMonkeyPatch.js"></script>
   <script type="text/javascript" src="js/utils.js"></script>
   <script type="text/javascript" src="js/dsp.js"></script>
+  <script type="text/javascript" src="js/wasm_dsp.js"></script>
+  <script type="text/javascript" src="js/wasm_dsp_module.js"></script>
 
-  <script type="text/javascript" src="js/osc_workerJsDsp.js"></script>
-  <script type="text/javascript" src="js/osc_MultipleWorkersJsDsp.js"></script>
-  <script type="text/javascript" src="js/osc_jsDsp.js"></script>
-  <script type="text/javascript" src="js/osc_webAudio.js"></script>
+  <script type="text/javascript" src="benchmarks/osc_workerJsDsp.js"></script>
+  <script type="text/javascript" src="benchmarks/osc_MultipleWorkersJsDsp.js"></script>
+  <script type="text/javascript" src="benchmarks/osc_jsDsp.js"></script>
+  <script type="text/javascript" src="benchmarks/osc_wasmDsp.js"></script>
+  <script type="text/javascript" src="benchmarks/osc_webAudio.js"></script>
 
   <style type="text/css">
     body {
@@ -34,6 +37,7 @@
   <button class="startButton" data-benchmark="osc_workerJsDsp">oscillators Worker JS DSP</button>
   <button class="startButton" data-benchmark="osc_MultipleWorkersJsDsp">oscillators Multiple workers JS DSP</button>
   <button class="startButton" data-benchmark="osc_jsDsp">oscillators JS DSP</button>
+  <button class="startButton" data-benchmark="osc_wasmDsp">oscillators WebAssembly DSP</button>
   <button class="startButton" data-benchmark="osc_webAudio">oscillators Web Audio</button>
 
   <div id="controls" style="display:none;">
